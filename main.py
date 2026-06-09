@@ -1,6 +1,6 @@
 from construcao import *
 from rotas import *
-from dados import *
+from leitor import carregar_instancia
 from utils import *
 from genetico import *
 import random
@@ -9,6 +9,15 @@ import copy
 TAMANHO_POP = 20
 NUM_GERACOES = 50
 TAXA_MUTACAO = 0.4 
+
+caminho_arquivo = "./Instances_Christofides_Eilon/E-n22-k4-w2-c7.cctp"
+
+print("Carregando instância...")
+
+U, demandas, capacidade, dist, C = carregar_instancia(caminho_arquivo, k_vizinhos=7)
+
+alpha = 0.5
+beta = 0.5
 
 print("Gerando população inicial...")
 populacao = gerar_populacao(TAMANHO_POP, U, demandas, capacidade, alpha, beta, C, dist)
@@ -23,12 +32,10 @@ for geracao in range(NUM_GERACOES):
     
     while len(nova_populacao) < TAMANHO_POP:
         pai = selecao_torneio(populacao)
-        
         filho = copy.deepcopy(pai)
         
         if random.random() < TAXA_MUTACAO:
-            mutacao(filho)
-            calcular_fitness(filho, dist)
+            mutacao(filho, dist) 
             
         nova_populacao.append(filho)
         
@@ -44,4 +51,3 @@ print("\n=== MELHOR SOLUÇÃO ENCONTRADA ===")
 print("Alocação (S):", melhor_solucao_global["S"])
 print("Rotas:", melhor_solucao_global["rotas"])
 print("Fitness:", melhor_solucao_global["fitness"])
-print("INDIVÍDUO GERADO:\n")

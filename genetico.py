@@ -51,7 +51,6 @@ def selecao_torneio(populacao, k=3):
 
 import copy
 
-# Adicionei o parametro dist, para recalcular o fitness depois da mutação
 def mutacao(individuo, dist):
     rotas_validas = [r for r in individuo["rotas"] if len(r) > 3]
 
@@ -64,7 +63,6 @@ def mutacao(individuo, dist):
 
     rota[idx1], rota[idx2] = rota[idx2], rota[idx1]
     
-    # Adicionei recalculo do fitness, pq ele tava ficando desatualizado
     calcular_fitness(individuo, dist)
 
     return individuo
