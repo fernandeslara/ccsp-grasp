@@ -6,11 +6,11 @@ from genetico import *
 import random
 import copy
 
-TAMANHO_POP = 20
-NUM_GERACOES = 50
-TAXA_MUTACAO = 0.4 
+TAMANHO_POP = 100 
+NUM_GERACOES = 200 
+TAXA_MUTACAO = 0.6
 
-caminho_arquivo = "./Instances_Christofides_Eilon/E-n22-k4-w2-c7.cctp"
+caminho_arquivo = "./Instances_Uchoa_et_al/X-n298-kX-w118-c7.cctp"
 
 print("Carregando instância...")
 
@@ -21,7 +21,6 @@ beta = 0.5
 
 print("Gerando população inicial...")
 populacao = gerar_populacao(TAMANHO_POP, U, demandas, capacidade, alpha, beta, C, dist)
-
 print("Iniciando evolução...\n")
 
 for geracao in range(NUM_GERACOES):
@@ -31,11 +30,13 @@ for geracao in range(NUM_GERACOES):
     nova_populacao.append(copy.deepcopy(melhor_atual))
     
     while len(nova_populacao) < TAMANHO_POP:
-        pai = selecao_torneio(populacao)
-        filho = copy.deepcopy(pai)
+        pai1 = selecao_torneio(populacao)
+        pai2 = selecao_torneio(populacao)
+        
+        filho = crossover(pai1, pai2, demandas, capacidade, dist, C)
         
         if random.random() < TAXA_MUTACAO:
-            mutacao(filho, dist) 
+            mutacao(filho, dist, demandas, capacidade, C) 
             
         nova_populacao.append(filho)
         
