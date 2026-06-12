@@ -1,6 +1,7 @@
 from construcao import alocar_demandas
 from rotas import construir_rotas
 import random
+import copy
 
 def criar_individuo(U, demandas, capacidade, alpha, beta, C, dist):
     U_local = U.copy()
@@ -42,80 +43,66 @@ def gerar_populacao(tamanho_populacao, U, demandas, capacidade, alpha, beta, C, 
 
     return populacao
 
-def selecao_torneio(populacao, k=3):
+def selecao_torneio(populacao, k=2):
     torneio = random.sample(populacao, k)
 
     vencedor = min(torneio, key=lambda ind: ind["fitness"])
 
     return vencedor
 
-import copy
-
-def mutacao(individuo, dist):
-    rotas_validas = [r for r in individuo["rotas"] if len(r) > 3]
-
-    if not rotas_validas:
-        return individuo 
-
-    rota = random.choice(rotas_validas)
-
-    idx1, idx2 = random.sample(range(1, len(rota) - 1), 2)
-
-    rota[idx1], rota[idx2] = rota[idx2], rota[idx1]
+def mutacao(individuo, dist, demandas, capacidade, C):
+    S = individuo["S"]
+    if len(S) < 2:
+        return individuo
+        
+    v1, v2 = random.sample(range(len(S)), 2)
     
-    calcular_fitness(individuo, dist)
-
+    if not S[v1]: 
+        return individuo
+        
+    u = random.choice(S[v1])
+    
+    carga2 = sum(demandas[cliente] for cliente in S[v2])
+    if carga2 + demandas[u] <= capacidade:
+        S[v1].remove(u)
+        S[v2].append(u)
+        
+        individuo["S"] = [v for v in S if v]
+        
+        from rotas import construir_rotas
+        individuo["rotas"] = construir_rotas(individuo["S"], 0.5, C, dist)
+        calcular_fitness(individuo, dist)
+        
     return individuo
 
-def crossover(pai1, pai2, demandas, capacidade, dist):
-    seq1 = [c for rota in pai1["rotas"] for c in rota if c !=0]
-    seq2 = [c for rota in pai2["rotas"] for c in rota if c!= 0]
-
-    if tam < 2:
+def crossover(pai1, pai2, demandas, capacidade, dist, C):
+    S1 = pai1["S"]
+    S2 = pai2["S"]
+    
+    if not S1:
         return copy.deepcopy(pai1)
-    
-    tam = len(seq1)
-    corte1, corte2 = sorted(random.sample(range(tam), 2))
-    filho_seq = [None] * tam
-    
-    for i in range(corte1, corte2 + 1):
-        filho_seq[i] = seq1[i]
-
-    pos = 0
-
-    for cliente in seq2:
-        if cliente not in filho_seq:
-            while filho_seq[pos] is not None:
-                pos += 1
-            filho_seq[pos] = cliente
-    
-    rotas = []
-    rota_atual = [0]
-    carga_atual = 0
-
-    for cliente in filho_seq:
-        demanda_cliente = demandas[cliente]
-        if carga_atual + demanda_cliente <= capacidade:
-            rota_atual.append(cliente)
-            carga_atual += demanda_cliente
         
-        else:
-            rota_atual.append(0)
-            rotas.append(rota_atual)
-
-            rota_atual = [0, cliente]
-            carga_atual = demanda_cliente
-
-    rota_atual.append(0)
-    rotas.append(rota_atual)
-
+    veiculo_herdado = random.choice(S1)
+    S_filho = [veiculo_herdado.copy()]
+    clientes_alocados = set(veiculo_herdado)
+    
+    for veiculo_p2 in S2:
+        novo_veiculo = []
+        for u in veiculo_p2:
+            if u not in clientes_alocados:
+                novo_veiculo.append(u)
+                clientes_alocados.add(u)
+        
+        if novo_veiculo:
+            S_filho.append(novo_veiculo)
+            
+    rotas_filho = construir_rotas(S_filho, 0.5, C, dist)
+    
     filho = {
-        "S": None,
-        "rotas": rotas,
+        "S": S_filho,
+        "rotas": rotas_filho,
         "fitness": None
     }
-
+    
     calcular_fitness(filho, dist)
-
     return filho
-
